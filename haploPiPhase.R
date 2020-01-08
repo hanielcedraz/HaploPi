@@ -1,19 +1,29 @@
 #!/usr/bin/env Rscript
 
-beagle_dir <- paste('/Users/haniel/OneDrive-Wageningen/Analysis_WUR_topigs/haplotypes/pipline_haplotype_beagle/beagle/')
-beagle <- paste0(beagle_dir, 'beagle.21Sep19.ec3.jar')
+Install_Multiples_Packages <- function(packages) {
+    pack <- packages[!(packages %in% installed.packages()[,'Package'])];
+    if (length(pack)) {
+        install.packages(pack, repos = 'https://cran.rstudio.com/')
+    }
+    
+    for (package_i in packages) {
+        suppressPackageStartupMessages(library(package_i, character.only = TRUE, quietly = TRUE))
+    }
+    
+}
 
+Install_Multiples_Packages(c('optparse', 'parallel', "tools", "data.table", "tidyr", "dplyr"))
 
-suppressPackageStartupMessages(library("tools"))
-suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("optparse"))
-suppressPackageStartupMessages(library("data.table"))
-suppressPackageStartupMessages(library("tidyr"))
+#suppressPackageStartupMessages(library("tools"))
+#suppressPackageStartupMessages(library("parallel"))
+#suppressPackageStartupMessages(library("optparse"))
+#suppressPackageStartupMessages(library("data.table"))
+#suppressPackageStartupMessages(library("tidyr"))
 
 #where [GB] is an upper bound on the memory pool in gigabytes (e.g. –Xmx50g), and [arguments] is a space separated list of parameter values, each having the format parameter=value.
 option_list <- list(
-    make_option(c("-i", "--input"), type = "character", default = "file.txt",
-                help = "The filename of the sample file [default %default]",
+    make_option(c("-i", "--input"), type = "character", default = "phased_haplotype.vcf",
+                help = "The vcf file containing phased haplotypes [default %default]",
                 dest = "inputFile"),
     make_option(c("-f", "--phenotype"), type = "character", default = "phenotype.txt",
                 help = "phenotype file [default %default]",
@@ -24,6 +34,9 @@ option_list <- list(
     make_option(c("-r", "--inputFolder"), type = "character", default = "00-GenotypedFiles",
                 help = "Directory where the sequence data is stored [default %default]",
                 dest = "inputFolder"),
+    make_option(c("-a", "--map"), type = "character", default = "genetic_map.ped",
+                help = "Specifies a PLINK format genetic map with cM units [default %default]",
+                dest = "map"),
     make_option(c("-b", "--haplotypeFolder"), type = "character", default = '01-haplotypeFolder',
                 help = "Directory where to store the mapping results [default %default]",
                 dest = "haplotypeFolder"),
@@ -56,7 +69,7 @@ opt <- parse_args(OptionParser(option_list = option_list, usage = paste('%prog',
 
 
 if (!file.exists('beagle')) {
-    system(paste('mkdir beagle'))
+    dir.create(file.path('beagle'), recursive = TRUE, showWarnings = FALSE)
     system(paste('wget https://faculty.washington.edu/browning/beagle/beagle.21Sep19.ec3.jar -O beagle/beagle.21Sep19.ec3.jar'))
 }
 
@@ -156,7 +169,10 @@ beagle.phase <- function() {
         system(paste('java', paste0('-Xmx', opt$memmory,'g'), '-jar', beagle,
                      paste0('gt=', opt$inputFile),
                      paste0('out=', opt$output),
-                     paste0('chrom=',opt$window),
+                     paste0('chrom=', opt$window),
+                     if (file.exists(opt$map)) {
+                     paste0('map=', opt$map)
+                     },
                      if (file.exists(opt$excludeSamples)) {
                          opt$excludeSamples
                      },
@@ -165,10 +181,10 @@ beagle.phase <- function() {
                      }
         ))})
 }
-    # if (!all(sapply(star.pair.mapping, "==", 0L))) {
-    #     write(paste("Something went wrong with STAR mapping some jobs failed"),stderr())
-    #     stop()
-    # }
+# if (!all(sapply(star.pair.mapping, "==", 0L))) {
+#     write(paste("Something went wrong with STAR mapping some jobs failed"),stderr())
+#     stop()
+# }
 
 
 run.beagle <- beagle.phase()
