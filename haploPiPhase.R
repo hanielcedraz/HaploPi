@@ -71,7 +71,13 @@ opt <- parse_args(OptionParser(option_list = option_list, usage = paste('%prog',
 if (!file.exists('beagle')) {
     dir.create(file.path('beagle'), recursive = TRUE, showWarnings = FALSE)
     system(paste('wget https://faculty.washington.edu/browning/beagle/beagle.21Sep19.ec3.jar -O beagle/beagle.21Sep19.ec3.jar'))
+    system('chmod +x beagle/beagle.21Sep19.ec3.jar')
+    beagle <- "beagle/beagle.21Sep19.ec3.jar"
+} else {
+    beagle <- "beagle/beagle.21Sep19.ec3.jar"
 }
+
+
 
 ######################################################################
 ## loadSampleFile
@@ -171,7 +177,7 @@ beagle.phase <- function() {
                      paste0('out=', opt$output),
                      paste0('chrom=', opt$window),
                      if (file.exists(opt$map)) {
-                     paste0('map=', opt$map)
+                         paste0('map=', opt$map)
                      },
                      if (file.exists(opt$excludeSamples)) {
                          opt$excludeSamples
