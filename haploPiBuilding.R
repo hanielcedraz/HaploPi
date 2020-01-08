@@ -1,11 +1,27 @@
 #!/usr/bin/env Rscript
 
-suppressPackageStartupMessages(library("tools"))
-suppressPackageStartupMessages(library("parallel"))
-suppressPackageStartupMessages(library("optparse"))
-suppressPackageStartupMessages(library("data.table"))
-suppressPackageStartupMessages(library("tidyr"))
-suppressPackageStartupMessages(library("dplyr"))
+Install_Multiples_Packages <- function(packages) {
+  pack <- packages[!(packages %in% installed.packages()[,'Package'])];
+  if (length(pack)) {
+    install.packages(pack, repos = 'https://cran.rstudio.com/')
+  }
+
+  for (package_i in packages) {
+    suppressPackageStartupMessages(library(package_i, character.only = TRUE, quietly = TRUE))
+    }
+
+}
+
+Install_Multiples_Packages(c('optparse', 'parallel', "tools", "data.table", "tidyr", "dplyr"))
+
+
+
+#suppressPackageStartupMessages(library("tools"))
+#suppressPackageStartupMessages(library("parallel"))
+#suppressPackageStartupMessages(library("optparse"))
+#suppressPackageStartupMessages(library("data.table"))
+#suppressPackageStartupMessages(library("tidyr"))
+#suppressPackageStartupMessages(library("dplyr"))
 
 option_list <- list(
     make_option(c("-i", "--input"), type = "character", default = "file.txt",
